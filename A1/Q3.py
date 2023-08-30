@@ -7,11 +7,10 @@ from matplotlib.colors import ListedColormap
 #Imput handling
 #Taking input data using pandas and converting to numpy arrays (for faster indexing)
 dirname = os.path.dirname(__file__)
-filename = os.path.join(dirname, 'relative/path/to/file/you/want')
 
-inputdf = pd.read_csv(os.path.join(dirname, 'data\\q3\\logisticX.csv'),header=None)
+inputdf = pd.read_csv(os.path.join(dirname, 'data/q3/logisticX.csv'),header=None)
 logisticX = pd.DataFrame(inputdf).to_numpy().T
-outputdf = pd.read_csv(os.path.join(dirname, 'data\\q3\\logisticY.csv'),header=None)
+outputdf = pd.read_csv(os.path.join(dirname, 'data/q3/logisticY.csv'),header=None)
 logisticY = pd.DataFrame(outputdf).to_numpy().T
 
 

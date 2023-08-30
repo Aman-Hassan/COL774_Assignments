@@ -10,9 +10,9 @@ dirname = os.path.dirname(__file__)
 
 #Imput handling
 #Taking input data using pandas and converting to numpy arrays (for faster indexing)
-inputdf = pd.read_csv(os.path.join(dirname,'data\\q1\\linearX.csv'),header=None)
+inputdf = pd.read_csv(os.path.join(dirname,'data/q1/linearX.csv'),header=None)
 linearX = pd.Series(inputdf[0]).to_numpy()
-outputdf = pd.read_csv(os.path.join(dirname,'data\\q1\\linearY.csv'),header=None)
+outputdf = pd.read_csv(os.path.join(dirname,'data/q1/linearY.csv'),header=None)
 linearY = pd.Series(outputdf[0]).to_numpy()
 
 #Normalising input data to 0 mean and unit variance
@@ -160,7 +160,7 @@ iii) np.sum(Y) - (ii) would give the required sigma(Y-theta*X) for all the pairs
 iv) 1/(2m) * np.squar((iii)) finally gives J(theta) for all pairs of theta [it is a s^2*1 matrix]
 '''
 
-def Error_plotter(X,Y):
+def Error_plotter(X,Y,t):
     theta0 = np.linspace(-6.0,6.0,30) #Creates a linear space from -6 to 6 with 30 samples
     theta1 = np.linspace(-6.0,6.0,30) #Creates a linear space from -6 to 6 with 30 samples
     theta0,theta1 = np.meshgrid(theta0,theta1) #Creates a mesh grid using the above
@@ -189,11 +189,11 @@ def animate(i):
 
 
 
-# theta = GradientDescent(LinearX,linearY)
+theta = GradientDescent(LinearX,linearY)
 # ScatterPlot_Hypothesisfunc(linearX,linearY,LinearX,theta)
 
 # theta = GD_withJ(LinearX,linearY)
-Error_plotter(linearX,linearY)
+Error_plotter(linearX,linearY,theta)
 
 
 
