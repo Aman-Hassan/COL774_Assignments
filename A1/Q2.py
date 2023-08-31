@@ -3,9 +3,10 @@ import time
 import datetime
 import pandas as pd
 import numpy as np
-import matplotlib as plt
+import matplotlib.pyplot as plt
+from mpl_toolkits import mplot3d
 
-dirname = os.path.dirname(__file__)
+
 
 #Part 1
 
@@ -16,14 +17,16 @@ def sampler(n = 1000000, theta = np.array([3,1,2]),Dist_x1 = (3,4), Dist_x2 = (-
 
 
 #Part 2
-
 def SGD(epochs=100,eta=0.001,batch_size=[100],k=1000):
     X0,Y0 = sampler()
     generated_theta = []
-    print(f"Starting time: {datetime.datetime.now()}")
+    theta_iterations = []
+    # print(f"Starting time: {datetime.datetime.now()}")
     for r in batch_size:
-        print(f"Running for batch size: {r}")
+        # print(f"Running for batch size: {r}")
+        theta_r = []
         theta = np.zeros(X0.shape[0])
+        theta_r.append(theta)
         epoch = 0
         no_of_batches = 0
         is_converged = False
@@ -42,6 +45,7 @@ def SGD(epochs=100,eta=0.001,batch_size=[100],k=1000):
                 theta = theta + eta*(1/len(Y))*(diff @ X.T)
                 J_sum += (1/(2*len(Y))) * (np.sum(diff**2))
                 no_of_batches += 1
+                theta_r.append(theta)
                 if ((batch+1)%k == 0): #For moving average we have chose to compute at every k number of iterations
                     J1_avg = J_sum/k
                     if abs(J1_avg - J_avg)<1e-3:
@@ -51,34 +55,58 @@ def SGD(epochs=100,eta=0.001,batch_size=[100],k=1000):
                     J_sum = 0
             if is_converged:
                 break
+        theta_iterations.append(theta_r)
         generated_theta.append((r,time.time()-begin,epoch,theta))
-        print(f"    Theta obtained: {theta}\n    Number of epochs taken: {epoch}\n    Number of batches taken: {no_of_batches}\n    Time taken: {time.time()-begin}")
-    return(generated_theta)
+        # print(f"    Theta obtained: {theta}\n    Number of epochs taken: {epoch}\n    Number of batches taken: {no_of_batches}\n    Time taken: {time.time()-begin}")
+    return((theta_iterations,generated_theta))
 
 '''
 Obtained Result for Termination condition - epochs < 100 :
 
-For absolute diff of moving avg < 1e-3:
+For absolute diff of moving avg < 1e-2:
     Running for batch size: 1
-        Theta obtained: [2.9759403  1.00344442 2.03538132]
+        Theta obtained: [2.66798434 1.02511091 1.93940873]
         Number of epochs taken: 1
-        Number of batches taken: 30000
-        Time taken: 0.46651625633239746
+        Number of batches taken: 8000
+        Time taken: 0.31285524368286133
     Running for batch size: 100
-        Theta obtained: [2.97287722 1.00576369 1.99738041]
-        Number of epochs taken: 2
-        Number of batches taken: 18000
-        Time taken: 0.40770888328552246
+        Theta obtained: [2.75937793 1.05088433 1.98302832]
+        Number of epochs taken: 1
+        Number of batches taken: 9000
+        Time taken: 0.31638216972351074
     Running for batch size: 10000
-        Theta obtained: [2.81313327 1.04114584 1.98577257]
+        Theta obtained: [2.81873847 1.04050485 1.98780263]
         Number of epochs taken: 100
         Number of batches taken: 10000
-        Time taken: 13.17662525177002
+        Time taken: 20.768263578414917
     Running for batch size: 1000000
-        Theta obtained: [0.24510686 0.91737519 0.46577189]
+        Theta obtained: [0.24484246 0.91777101 0.46562146]
         Number of epochs taken: 100
         Number of batches taken: 100
-        Time taken: 13.477739810943604
+        Time taken: 16.1912202835083
+
+
+For absolute diff of moving avg < 1e-3:
+    Running for batch size: 1
+        Theta obtained: [3.04445475 0.96776138 2.00765892]
+        Number of epochs taken: 1
+        Number of batches taken: 82000
+        Time taken: 1.0996503829956055
+    Running for batch size: 100
+        Theta obtained: [2.9145991  1.02132019 1.99451709]
+        Number of epochs taken: 2
+        Number of batches taken: 13000
+        Time taken: 0.3621838092803955
+    Running for batch size: 10000
+        Theta obtained: [2.81470792 1.04028608 1.98591622]
+        Number of epochs taken: 100
+        Number of batches taken: 10000
+        Time taken: 14.177334070205688
+    Running for batch size: 1000000
+        Theta obtained: [0.24503307 0.91594349 0.46384932]
+        Number of epochs taken: 100
+        Number of batches taken: 100
+        Time taken: 13.489541053771973
 
     
 For absolute diff of moving avg < 1e-5:
@@ -103,6 +131,7 @@ For absolute diff of moving avg < 1e-5:
         Number of batches taken: 100
         Time taken: 12.776516437530518
 
+        
 For absolute diff of moving avg < 1e-7
     Running for batch size: 1
         Theta obtained: [3.04958896 0.97003056 2.05811228]
@@ -128,6 +157,69 @@ For absolute diff of moving avg < 1e-7
 Questions - Why is batch_size of 10000 always taking 100 epochs?
 '''
 
+#Part 3
+
+dirname = os.path.dirname(__file__)
+test_data = pd.read_csv(os.path.join(dirname,"./data/q2/q2test.csv")).to_numpy()
+test_X = np.vstack([np.ones(test_data.shape[0]),test_data.T[:2]])
+test_Y = test_data.T[2]
+
+def predict(X,Y,runs=1):
+    J_arr = np.zeros(5)
+    run = 0
+    while run < runs:
+        train_thetas = SGD(batch_size=[1,100,10000,1000000])[1]
+        train_thetas.append((np.array([3,1,2]),))
+        index = 0
+        for i in train_thetas:
+            theta = i[-1]
+            diff = Y - theta @ X
+            J_arr[index] += (1/(2*len(Y))) * (np.sum(diff**2))
+            index += 1
+        run+=1
+        # print(run)
+    J_arr/=runs
+    batch=[1,100,10000,1000000]
+    for i in range(5):
+        if i == 4:
+            print(f"Test Error for orignal hypothesis: {J_arr[i]}")
+        else:
+            print(f"Test Error for hypothesis generated by batch size {batch[i]}: {J_arr[i]}")
+
+
+'''
+Obtained Output: (run once)
+Test Error for hypothesis generated by batch size 1: 1.2491719628594877
+Test Error for hypothesis generated by batch size 100: 0.9874544734500925
+Test Error for hypothesis generated by batch size 10000: 1.0797755463751477
+Test Error for hypothesis generated by batch size 1000000: 120.73694220436018
+Test Error for orignal hypothesis: 0.9829469215
+
+Obtained Output: (averaged over 20 runs)
+Test Error for hypothesis generated by batch size 1: 1.1262306695758668
+Test Error for hypothesis generated by batch size 100: 1.0024723603378018
+Test Error for hypothesis generated by batch size 10000: 1.0816612048778356
+Test Error for hypothesis generated by batch size 1000000: 120.90647542640436
+Test Error for orignal hypothesis: 0.9829469215000003
+'''
+
+#Part 4
+def plot_movement():
+    b = [1,100,10000,1000000]
+    theta_iterations = SGD(batch_size=b)[0]
+    fig = plt.figure()
+    ax = fig.add_subplot(111,projection='3d')
+    ax.set_xlabel("theta0")
+    ax.set_ylabel("theta1")
+    ax.set_zlabel("theta2")
+    ax.set_title('Movement of theta for various values of batch_size')
+    color = ['red','green','blue','black']
+    for i in range(len(theta_iterations)):
+        theta = np.array(theta_iterations[i]).T
+        ax.plot3D(theta[0],theta[1],theta[2], c=color[i], label=f'b = {b[i]}')
+    ax.legend()
+    plt.show()
+
 #Test Area
 # x = np.array([[1,2,3],[4,5,6]])
 # y = np.array([7,8,9])
@@ -137,4 +229,6 @@ Questions - Why is batch_size of 10000 always taking 100 epochs?
 # x1,y1 = rand[:-1],rand[-1]
 
 # print(abs(np.mean(x-x1))+abs(np.mean(y-y1)))
-SGD(batch_size=[1,100,10000,1000000])
+# SGD(batch_size=[1,100,10000,1000000])
+# predict(test_X,test_Y)
+plot_movement()
