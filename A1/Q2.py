@@ -220,15 +220,3 @@ def plot_movement():
     ax.legend()
     plt.show()
 
-#Test Area
-# x = np.array([[1,2,3],[4,5,6]])
-# y = np.array([7,8,9])
-# print(y.shape,y.size)
-# comb = np.vstack([x,y])
-# rand = np.random.permutation(comb.T).T
-# x1,y1 = rand[:-1],rand[-1]
-
-# print(abs(np.mean(x-x1))+abs(np.mean(y-y1)))
-# SGD(batch_size=[1,100,10000,1000000])
-# predict(test_X,test_Y)
-plot_movement()

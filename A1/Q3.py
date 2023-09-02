@@ -86,9 +86,8 @@ When termination condition -> 1e-20
 def Plot(X1,Y1,logistic_X,theta):
     x1,x2 = logistic_X
     y = Y1[0]
-    colormap = np.array(['b','g'])
     s = plt.scatter(x1,x2,c=y,cmap=ListedColormap(["green","blue"]))
-    #New inputs on which hypothes
+    #New inputs on which hypothesis will be applied
     input_x = np.linspace(-3.0,3.0,30)
     input_x_1 = np.vstack([[1]*input_x.shape[0],input_x])
     plt.plot(input_x,(theta[:2] @ input_x_1)/(-theta[2]),c = "r")
@@ -99,15 +98,7 @@ def Plot(X1,Y1,logistic_X,theta):
     plt.legend(handles=s.legend_elements()[0],labels=[0,1])
     plt.show()
 
+Plot(X,Y,logisticX,Logistic_regression(X,Y))
 
 
-#Testing Area
-# X1 = np.array([[1,1,1],[1,2,3],[2,3,4]])
-# # Y1 = np.array([1,2,3])
-# t1 = np.array([0,0,0])
-# D = np.diag(sigmoid(t1 @ X1)*(1-sigmoid(t1 @ X1)))
-# print (X1 @ D @ X1.T)
-
-t = Logistic_regression(X,Y)
-Plot(X,Y,logisticX,t)
 

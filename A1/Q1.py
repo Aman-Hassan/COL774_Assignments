@@ -3,7 +3,9 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits import mplot3d
-from matplotlib.animation import FuncAnimation
+from matplotlib import animation
+from IPython.display import HTML, Image
+
 
 
 dirname = os.path.dirname(__file__)
@@ -91,23 +93,28 @@ When termination condition -> 1e-20
 '''
 
 
-def GD_withJ(X,Y):
-    for eps in [1e-8,1e-12,1e-16,1e-20]:
+def GD_withJ(X,Y,eps_list = [1e-8,1e-12,1e-16,1e-20],eta_list = [0.1,0.025,0.001]):
+    for eps in eps_list:
         print("When termination condition ->",eps)
-        for eta in [0.1,0.025,0.001]:
+        history = []
+        for eta in eta_list:
+            history_eta = [eta,[],[]]
             J = 0
             theta = np.zeros(2)
             t = 0
             while True:
+                history_eta[1].append(theta)
                 diff = Y - theta @ X
                 theta = theta + eta*(1/len(Y))*(diff @ X.T)
                 J1 = (1/(2*len(Y))) * (np.sum(diff**2))
+                history_eta[2].append(J1)
                 if abs(np.sum(J1-J)) < eps:
                     break
                 J = J1
                 t += 1
+            history.append(history_eta)
             print("    When eta =",eta,"-> Converges after",t+1,"iterations to",theta)
-    return(theta)
+    return((theta,history))
 
 '''
 Observations for a given value of eta:
@@ -131,7 +138,8 @@ When termination condition -> 1e-16
 
 
 #Part 2 (Plotting hypothesis function)
-def ScatterPlot_Hypothesisfunc(X,Y,LinX,theta):
+def ScatterPlot_Hypothesisfunc(X,Y,LinX):
+    theta = GradientDescent(LinearX,linearY)
     plt.scatter(X,Y)
     # plt.legend("Datapoints")
     # plt.title("Scatter Chart")
@@ -143,7 +151,7 @@ def ScatterPlot_Hypothesisfunc(X,Y,LinX,theta):
 
 
 
-#Part3 3D Plot of J(theta)
+#Part3 a) 3D Plot of J(theta)
 '''
 Matrix Calulation of J(theta):
 - theta is a matrix of the size n*s^2 (s is number of samples, n is number of parameters)
@@ -160,60 +168,119 @@ iii) np.sum(Y) - (ii) would give the required sigma(Y-theta*X) for all the pairs
 iv) 1/(2m) * np.squar((iii)) finally gives J(theta) for all pairs of theta [it is a s^2*1 matrix]
 '''
 
-def Error_plotter(X,Y,t):
-    theta0 = np.linspace(-6.0,6.0,30) #Creates a linear space from -6 to 6 with 30 samples
-    theta1 = np.linspace(-6.0,6.0,30) #Creates a linear space from -6 to 6 with 30 samples
-    theta0,theta1 = np.meshgrid(theta0,theta1) #Creates a mesh grid using the above
-    X1 = [[1]*len(X),X]
+theta0 = np.linspace(-2.0,2.0,25) #Creates a linear space from -6 to 6 with 30 samples
+theta1 = np.linspace(-2.0,2.0,25) #Creates a linear space from -6 to 6 with 30 samples
+theta0,theta1 = np.meshgrid(theta0,theta1) #Creates a mesh grid using the above
+X1 = LinearX
+Y = linearY
 
-    #Now we need to calculate J(theta) at each of the pairs of values from theta0 and theta1
-    theta = np.array([np.ravel(theta0),np.ravel(theta1)])
-    J = 1/(2*len(Y))*(((Y - theta.T @ X1)**2).sum(axis=1)) 
+#Now we need to calculate J(theta) at each of the pairs of values from theta0 and theta1
+theta = np.array([np.ravel(theta0),np.ravel(theta1)])
+J = 1/(2*len(Y))*(((Y - theta.T @ X1)**2).sum(axis=1)) 
 
-    #Plotting
-    fig = plt.figure()
-    ax = fig.add_subplot(111, projection='3d')
-    ax.plot_surface(theta0, theta1, J.reshape(theta0.shape),cmap="viridis")
+#Plotting
+fig = plt.figure(figsize=(8,8))
+ax = fig.add_subplot(111, projection='3d')
+ax.plot_surface(theta0, theta1, J.reshape(theta0.shape),cmap="viridis")
 
-    ax.set_xlabel('Theta0')
-    ax.set_ylabel('Theta1')
-    ax.set_zlabel('Cost function')
+ax.set_xlabel('Theta0')
+ax.set_ylabel('Theta1')
+ax.set_zlabel('Cost function')
+ax.view_init(45, -45)
 
-    # anim = FuncAnimation(fig,animate,interval=200)
-    plt.show()
+
+#Part 3 b) creating animation of 3D Plot
+
+# Create animation
+
+line, = ax.plot([], [], [], 'r', label = 'Gradient descent')
+point, = ax.plot([], [], [], 'o', color = 'red')
+values = GD_withJ(LinearX,linearY,eps_list = [1e-8],eta_list = [0.1,0.025,0.001])
+history = values[-1]
+req_theta = np.array(history[-2][1])
+theta_0 = req_theta.T[0]
+theta_1 = req_theta.T[1]
+J_history = np.array(history[-2][2])
+
+def init():
+    line.set_data([], [])
+    line.set_3d_properties([])
+    point.set_data([], [])
+    point.set_3d_properties([])
+
+    return line, point
 
 def animate(i):
-    pass
+    # Animate line
+    line.set_data(theta_0[:i], theta_1[:i])
+    line.set_3d_properties(J_history[:i])
+    
+    # Animate points
+    point.set_data(theta_0[:i], theta_1[:i])
+    point.set_3d_properties(J_history[:i])
 
 
+    return line, point
 
+ax.legend(loc = 1)
 
+anim = animation.FuncAnimation(fig, animate, init_func=init,
+                               frames=len(theta0), interval=200, 
+                               repeat_delay=60,blit="True")
 
-theta = GradientDescent(LinearX,linearY)
-# ScatterPlot_Hypothesisfunc(linearX,linearY,LinearX,theta)
+plt.show()
+# HTML(anim2.to_jshtml())
 
-# theta = GD_withJ(LinearX,linearY)
-Error_plotter(linearX,linearY,theta)
+#Part 4: Contour Plotting
 
+fig1,ax1 = plt.subplots(figsize=(8,8))
+ax1.contour(theta0, theta1, J.reshape(theta0.shape), 50, cmap = 'jet')
 
+# # Create animation
+line, = ax1.plot([], [], 'r', label = 'Gradient descent')
+point, = ax1.plot([], [], marker = 'o', color = 'red')
+ax1.set_xlabel('Theta0')
+ax1.set_ylabel('Theta1')
 
-# TESTING AREA: 
-# def fun(x, y):
-#     return x**2 + y
+def init_1():
+    line.set_data([], [])
+    point.set_data([], [])
 
-# fig = plt.figure()
-# ax = fig.add_subplot(111, projection='3d')
-# x = y = np.arange(-3.0, 3.0, 3)
-# X, Y = np.meshgrid(x, y)
-# zs = np.array(fun(np.ravel(X), np.ravel(Y)))
-# Z = zs.reshape(X.shape)
+    return line, point
 
-# print(X.shape,Y.shape,Z.shape)
-# ax.plot_surface(X, Y, Z)
+def animate_1(i):
+    #Animating line
+    line.set_data(theta_0[:i], theta_1[:i])
 
-# ax.set_xlabel('X Label')
-# ax.set_ylabel('Y Label')
-# ax.set_zlabel('Z Label')
+    #Animating points
+    point.set_data(theta_0[:i],theta_1[:i])
 
-# plt.show()
+    return line, point
 
+ax1.legend(loc = 1)
+
+anim1 = animation.FuncAnimation(fig1, animate_1, init_func=init_1,
+                               frames=len(theta_0), interval=200, 
+                               repeat_delay=60, blit=True)
+
+plt.show()
+
+#Part 5
+for i in history:
+    req_theta = np.array(i[1])
+    theta_0 = req_theta.T[0]
+    theta_1 = req_theta.T[1]
+    fig1,ax1 = plt.subplots(figsize=(8,8))
+    ax1.contour(theta0, theta1, J.reshape(theta0.shape), 50, cmap = 'jet')
+
+    # # Create animation
+    line, = ax1.plot([], [], 'r', label = 'Gradient descent')
+    point, = ax1.plot([], [], marker = 'o', color = 'red')
+    ax1.set_xlabel('Theta0')
+    ax1.set_ylabel('Theta1')
+    animi = animation.FuncAnimation(fig1, animate_1, init_func=init_1,
+                               frames=len(theta_0), interval=200, 
+                               repeat_delay=60, blit=True)
+    plt.show()
+
+# ScatterPlot_Hypothesisfunc(linearX,linearY,LinearX)
