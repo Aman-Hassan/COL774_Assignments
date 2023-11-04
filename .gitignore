@@ -167,3 +167,5 @@ reference*
 *.code-workspace
 */Data
 */Submission
+
+*.synctex.gz
